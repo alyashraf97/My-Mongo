@@ -1,0 +1,21 @@
+---
+- name: Installing Mongodb
+  hosts: mongodb
+  become: true
+
+  tasks:
+    - name: add mongodb repo
+      ansible.builtin.template:
+        src: files/mongodb-org-7.0.repo.j2
+        dest: /etc/yum.repos.d/mongodb-org-7.0.repo
+
+    - name: install mongodb
+      ansible.builtin.dnf:
+        name: mongodb-org
+        state: latest
+
+    - name: Enable and start MongoDB service
+      ansible.builtin.service:
+        name: mongod
+        state: started
+        enabled: true
