@@ -28,7 +28,7 @@ for db_name in db_names:
         current_size = 0
 
         # Define the target size (in bytes)
-        target_size = random.randint(10 * 1024 * 1024, 100 * 1024 * 1024)  # Between 10 MB and 100 MB
+        target_size = random.randint(1 * 1024 * 1024, 10 * 1024 * 1024)  # Between 10 MB and 100 MB
 
         while current_size < target_size:
             # Generate a document with random data
