@@ -1,48 +1,67 @@
 #!/bin/python3
-from pymongo import MongoClient
-from faker import Faker
-import random
 import os
+import subprocess
+from pymongo import MongoClient
+import datetime as dt
+import pytz
 
-# Create a Faker instance
-fake = Faker()
+# MongoDB server connection parameters
+mongodb_host = "192.168.1.31"
+mongodb_port = "27017"
+
+# Set the desired timezone
+desired_timezone = "Africa/Cairo"
+
+# Create a timezone object
+cairo_timezone = pytz.timezone(desired_timezone)
+
+# The directory where the backup will be stored
+current_time = dt.datetime.now(cairo_timezone)
+time_format = "%Y-%m-%d_%H:%M:%S"
+target_directory_name = f'MongoDump-{current_time.strftime(time_format)}'
 
 # Create a MongoDB client
-client = MongoClient('mongodb://192.168.1.31:27017')
+client = MongoClient(f'mongodb://{mongodb_host}:{mongodb_port}')
 
-# Define the database names
-db_names = ['db1', 'db2', 'db3', 'db4']
+try:
+    target_directory = os.path.join(os.getcwd(), target_directory_name)
+    os.makedirs(target_directory)
+    print(f"Created directory with path: {target_directory}")
 
-# Define the collection names
-collection_names = ['collection1', 'collection2', 'collection3', 'collection4']
+    # Get the list of database names
+    databases = client.list_database_names()
 
-for db_name in db_names:
-    # Get the database
-    db = client[db_name]
+    for db_name in databases:
+        # Create a directory for the database
+        db_directory = os.path.join(target_directory, db_name)
+        os.makedirs(db_directory)
 
-    for collection_name in random.sample(collection_names, random.randint(2, 4)):
-        # Get the collection
-        collection = db[collection_name]
+        # Get the database
+        db = client[db_name]
+        print(f"Found DB {db_name}")
 
-        # Track the current size of the data
-        current_size = 0
+        # Get the list of collection names
+        collections = db.list_collection_names()
 
-        # Define the target size (in bytes)
-        target_size = random.randint(1 * 1024 * 1024, 10 * 1024 * 1024)  # Between 10 MB and 100 MB
+        for collection_name in collections:
+            print(f"Found collection: {collection_name}")
+            # Create a directory for the collection
+            collection_directory = os.path.join(db_directory, collection_name)
+            os.makedirs(collection_directory)
+            print(f"Backing up collection: {collection_name}")
 
-        while current_size < target_size:
-            # Generate a document with random data
-            doc = {
-                'name': fake.name(),
-                'address': fake.address(),
-                'email': fake.email(),
-                'job': fake.job(),
-                'text': fake.text(max_nb_chars=200)  # Limit the size of the text field
-            }
+            command = [
+                "mongodump",
+                "--host", mongodb_host,
+                "--port", mongodb_port,
+                "--db", db_name,
+                "--collection", collection_name,
+                "--out", collection_directory
+            ]
 
-            # Insert the document into the collection
-            collection.insert_one(doc)
+            # Run the command
+            subprocess.run(command)
 
-            # Update the current size of the data
-            current_size += len(str(doc))
-
+finally:
+    # Close the MongoDB client connection in the finally block
+    client.close()
