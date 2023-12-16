@@ -1,0 +1,51 @@
+##### ELASTICSEARCH #####
+
+docker network create elastic
+
+docker pull docker.elastic.co/elasticsearch/elasticsearch:8.11.3
+
+vi /etc/sysctl.conf --> vm.max_map_count = 262144
+sudo reboot
+
+docker run --name es01 --net elastic -p 9200:9200 -it -m 1GB \
+docker.elastic.co/elasticsearch/elasticsearch:8.11.3 \
+
+
+### The command prints the elastic user password and an enrollment token for Kibana
+###  Username: elastic
+###  Password: -kMkDbMH3i6QxYMRIwfp
+###  Fingerprint: a77c1bf9982bd4b0ba288a8bfc08350bf6482d9268e98bd914c20efee9d89815
+###  Token: eyJ2ZXIiOiI4LjExLjMiLCJhZHIiOlsiMTAuODkuMi4xMjo5MjAwIl0sImZnciI6ImE3N2MxYmY5OTgyYmQ0YjBiYTI4OGE4YmZjMDgzNTBiZjY0ODJkOTI2OGU5OGJkOTE0YzIwZWZlZTlkODk4MTUiLCJrZXkiOiJqeWpXYll3QnpXM05HOVIyRVY2LTpmQ3ZIOUd0dlFKT1dYLTN6cEZwMGhBIn0=
+###  eyJ2ZXIiOiI4LjExLjMiLCJhZHIiOlsiMTAuODkuMi4xMjo5MjAwIl0sImZnciI6ImE3N2MxYmY5OTgyYmQ0YjBiYTI4OGE4YmZjMDgzNTBiZjY0ODJkOTI2OGU5OGJkOTE0YzIwZWZlZTlkODk4MTUiLCJrZXkiOiJqeWpXYll3QnpXM05HOVIyRVY2LTpmQ3ZIOUd0dlFKT1dYLTN6cEZwMGhBIn0=
+###  
+
+
+docker exec -it es01 /usr/share/elasticsearch/bin/elasticsearch-reset-password \
+-u elastic
+
+
+Ctrl + p, Ctrl + q
+
+docker exec -it es01 \
+/usr/share/elasticsearch/bin/elasticsearch-create-enrollment-token \
+-s kibana
+
+docker run -e "ENROLLMENT_TOKEN=<token>" docker.elastic.co/elasticsearch/elasticsearch:8.11.3
+
+export ELASTIC_PASSWORD="your_password"
+
+docker cp es01:/usr/share/elasticsearch/config/certs/http_ca.crt .
+
+curl --cacert http_ca.crt -u elastic:$ELASTIC_PASSWORD https://localhost:9200
+
+
+##### KIBANA #####
+
+docker pull docker.elastic.co/kibana/kibana:8.11.3
+
+docker run --name kib01 --net elastic -p 5601:5601 \
+docker.elastic.co/kibana/kibana:8.11.3
+
+
+mongo API key: MXlqZ2JZd0J6VzNORzlSMmhGN1g6c0w0bXpDZi1UVGVJaEUtTTJQdmJ6QQ==
+

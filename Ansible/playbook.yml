@@ -4,15 +4,16 @@
   become: true
 
   tasks:
-    - name: add mongodb repo
+    - name: Add mongodb repo
       ansible.builtin.template:
         src: files/mongodb-org-7.0.repo.j2
         dest: /etc/yum.repos.d/mongodb-org-7.0.repo
+        mode: "0644"
 
-    - name: install mongodb
+    - name: Install mongodb
       ansible.builtin.dnf:
         name: mongodb-org
-        state: latest
+        state: present
 
     - name: Enable and start MongoDB service
       ansible.builtin.service:

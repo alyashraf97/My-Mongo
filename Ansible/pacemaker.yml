@@ -49,7 +49,8 @@
           - corosync-qdevice
           - booth-site
         state: absent
-- name: test
+
+- name: Test
   hosts: abcd
   tasks:
     - name: Pacemaker service enabled and started

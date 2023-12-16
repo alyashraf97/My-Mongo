@@ -11,8 +11,7 @@ mongodb_port = "27017"
 # mongodb_pass = 'your_password'
 
 # The directory where the backup will be stored
-timestamp = dt.datetime.now().strftime('%Y-%m-%d_%H:%M:%S')
-backup_directory_name = f'MongoDump-{timestamp}'
+backup_directory_name = f'MongoDump-{dt.datetime.now()}'
 
 # Create a MongoDB client
 # client = MongoClient(f'mongodb://{mongodb_user}:{mongodb_pass}@
