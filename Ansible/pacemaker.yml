@@ -1,6 +1,6 @@
 ---
 - name: Play to install Pacemaker HA software
-  hosts: mongodb
+  hosts: mongo_cluster
   become: true
   vars:
     ha_password: "hacluster"
@@ -48,17 +48,15 @@
           - sbd
           - corosync-qdevice
           - booth-site
-        state: absent
+        state: present
 
-- name: Test
-  hosts: abcd
-  tasks:
-    - name: Pacemaker service enabled and started
-      loop: "{{ services }}"
-      ansible.builtin.service:
-        name: "{{ item }}"
-        state: started
-        enabled: true
+          #- name: Pacemaker service enabled and started
+          #ignore_failure: true
+          #loop: "{{ services }}"
+          #ansible.builtin.service:
+          #name: "{{ item }}"
+          #state: started
+          #enabled: true
 
     - name: Reset hacluster user's password
       ansible.builtin.user:

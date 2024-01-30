@@ -1,0 +1,14 @@
+---
+- name: Start Pacemaker services on nodes
+  hosts: mongo_cluster
+  become: true
+  tasks:
+    - name: Start services
+      loop:
+        - pacemaker
+        - corosync
+        - pcsd
+      ansible.builtin.service:
+        name: "{{ item }}"
+        state: started
+        enabled: true
