@@ -1,0 +1,34 @@
+---
+- name: Installing Mongodb
+  hosts: mongo_cluster
+  become: true
+
+  tasks:
+    - name: Add mongodb repo
+      ansible.builtin.yum_repository:
+        name: mongodb-org-repo
+        description: MongoDB org repository
+        baseurl: https://repo.mongodb.org/yum/redhat/9/mongodb-org/7.0/x86_64/
+        gpgcheck: 0
+        state: present
+        enabled: 1
+
+    - name: Install mongodb
+      ansible.builtin.dnf:
+        name: mongodb-org
+        state: present
+
+    - name: Fix Mongodb configuration
+      ansible.builtin.template:
+        src: files/mongod.conf.j2
+        dest: /etc/mongod.conf
+        backup: true
+        mode: "0644"
+        owner: mongod
+        group: mongod
+
+    - name: Enable and start MongoDB service
+      ansible.builtin.service:
+        name: mongod
+        state: started
+        enabled: true

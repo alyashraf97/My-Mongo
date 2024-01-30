@@ -1,0 +1,67 @@
+---
+- name: Play to install Pacemaker HA software
+  hosts: mongodb
+  become: true
+  vars:
+    ha_password: "hacluster"
+    repos:
+      - name: rocky9-highavailability-x86_64
+        description: "Rocky High Availability Repo"
+        file: rocky-ha.repo
+        baseurl: "http://dl.rockylinux.org/$contentdir/$releasever/HighAvailability/$basearch/os/"
+        mirrorlist: "https://mirrors.rockylinux.org/mirrorlist?arch=$basearch&repo=HighAvailability-$releasever$rltype"
+        enabled: true
+        gpgcheck: false
+      - name: rocky9-resilientstorage-x86_64
+        description: "Rocky 9 Resilient Storage Repo"
+        file: rocky-rs.repo
+        baseurl: "http://dl.rockylinux.org/$contentdir/$releasever/ResilientStorage/$basearch/os/"
+        mirrorlist: "https://mirrors.rockylinux.org/mirrorlist?arch=$basearch&repo=ResilientStorage-$releasever$rltype"
+        enabled: true
+        gpgcheck: false
+    services:
+      - pcsd
+      - corosync
+      - pacemaker
+
+  tasks:
+    - name: Enable HA repo
+      loop: "{{ repos }}"
+      ansible.builtin.yum_repository:
+        name: "{{ item.name }}"
+        description: "{{ item.description }}"
+        file: "{{ item.file }}"
+        baseurl: "{{ item.baseurl }}"
+        mirrorlist: "{{ item.mirrorlist }}"
+        enabled: "{{ item.enabled }}"
+        gpgcheck: "{{ item.gpgcheck }}"
+
+    - name: Install Pacemaker stuff
+      ansible.builtin.dnf:
+        name:
+          - pcs
+          - pacemaker
+          - corosync
+          - fence-agents-all
+          - gfs2-utils
+          - watchdog
+          - sbd
+          - corosync-qdevice
+          - booth-site
+        state: absent
+
+- name: Test
+  hosts: abcd
+  tasks:
+    - name: Pacemaker service enabled and started
+      loop: "{{ services }}"
+      ansible.builtin.service:
+        name: "{{ item }}"
+        state: started
+        enabled: true
+
+    - name: Reset hacluster user's password
+      ansible.builtin.user:
+        name: hacluster
+        password: "{{ ha_password | password_hash('sha512') }}"
+        update_password: always

@@ -1,0 +1,25 @@
+---
+- name: Fix Mongo Permisions
+  hosts: mongo_cluster
+  become: true
+
+  tasks:
+    - name: Fix MongoDB datafile permissions
+      ansible.builtin.file:
+        path: /var/lib/mongo
+        state: directory
+        recurse: true
+        owner: mongod
+        group: mongod
+
+    - name: Fix MongoDB sock file permissions
+      ansible.builtin.file:
+        path: /tmp/mongodb-27017.sock
+        owner: mongod
+        group: mongod
+
+    - name: Enable and start MongoDB service
+      ansible.builtin.service:
+        name: mongod
+        state: restarted
+        enabled: true
